@@ -8,10 +8,11 @@ const routes = require('./routes');
 const dataLib = require('./lib/data');
 const configuration = require('./config');
 
-
-dataLib.create('test', 'new file', { foo: 'bar' })
-    .then(res => console.log('success', typeof res))
+// for test start
+dataLib.delete('test', 'new file', { foo: 'bar' })
+    .then(res => console.log('success', res))
     .catch(reason => console.error('error', reason));
+// for test ends
 
 const httpsServerOptions = {
     key: readFileSync('./https/key.pem'),
