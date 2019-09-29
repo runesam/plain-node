@@ -5,14 +5,7 @@ const { readFileSync } = require('fs');
 const { StringDecoder } = require('string_decoder');
 
 const routes = require('./routes');
-const dataLib = require('./lib/data');
 const configuration = require('./config');
-
-// for test start
-dataLib.delete('test', 'new file', { foo: 'bar' })
-    .then(res => console.log('success', res))
-    .catch(reason => console.error('error', reason));
-// for test ends
 
 const httpsServerOptions = {
     key: readFileSync('./https/key.pem'),
@@ -42,7 +35,12 @@ function unifiedServer(req, res) {
     const trimmedPath = path.replace(/^\/+|\/+$/g, '');
     const onDone = (buffer) => {
         const controller = routes(trimmedPath);
-        controller({ buffer, headers, method }, res);
+        try {
+            const body = JSON.parse(buffer);
+            controller({ body, headers, method }, res);
+        } catch(error) {
+            console.error(error);
+        }
     }
 
     getBody(req, onDone);

@@ -5,6 +5,7 @@ const config = {
             https: 3001,
         },
         envName: 'staging',
+        hashSecret: 'randomSecret',
     },
     production: {
         port: {
@@ -12,6 +13,7 @@ const config = {
             https: 5001,
         },
         envName: 'production',
+        hashSecret: 'randomSecret',
     },
     get() {
         const { NODE_ENV } = process.env;
