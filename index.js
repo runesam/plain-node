@@ -32,15 +32,17 @@ function unifiedServer(req, res) {
     const { url, headers, method } = req;
     const parsedUrl = URL.parse(url, true);
     const path = parsedUrl.pathname;
+    const queryStrings = parsedUrl.query;
     const trimmedPath = path.replace(/^\/+|\/+$/g, '');
     const onDone = (buffer) => {
         const controller = routes(trimmedPath);
+        let body;
         try {
-            const body = JSON.parse(buffer);
-            controller({ body, headers, method }, res);
+            body = buffer ? JSON.parse(buffer) : buffer;
         } catch(error) {
             console.error(error);
         }
+        controller({ queryStrings, body, headers, method }, res);
     }
 
     getBody(req, onDone);

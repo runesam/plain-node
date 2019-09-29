@@ -1,11 +1,12 @@
 const { user } = require('./../models');
 const dataLib = require('./../lib/data');
-const { dataChecker, dataMapper, hash } = require('./../utils');
+const { dataChecker, dataMapper, hash, validators } = require('./../utils');
 
 const acceptableMethods = ['POST', 'GET', 'PUT', 'DELETE'];
 
 const handlers = {
-    POST(body) {
+    POST({ body }) {
+        console.log(body);
         return new Promise((resolve, reject) => {
             const errors = dataChecker(body, user);
             if (errors) {
@@ -26,14 +27,46 @@ const handlers = {
             }
         });
     },
-    GET() {
+    GET({ queryStrings: { phone } }) {
         return new Promise((resolve, reject) => {
+            const phoneValidator = user.phone.validate;
+            const invalid = phoneValidator.reduce((acc, item) => {
+                const result = validators[item](phone, user.phone);
+                if (result) {
+                    acc = typeof acc === 'object' ? acc : {};
+                    acc[item] = result;
+                }
+                return acc;
+            }, false);
 
+            if (invalid) {
+                reject({ status: 400, errors: { phone: invalid } });
+            } else {
+                dataLib.read('users', phone)
+                    .then(result => resolve({ status: 200, result }))
+                    .catch(errors => reject({ status: 404, errors }));
+            }
         });
     },
-    PUT() {
+    PUT({ body }) {
         return new Promise((resolve, reject) => {
+            const phoneValidator = user.phone.validate;
+            const invalid = phoneValidator.reduce((acc, item) => {
+                const result = validators[item](body.phone, user.phone);
+                if (result) {
+                    acc = typeof acc === 'object' ? acc : {};
+                    acc[item] = result;
+                }
+                return acc;
+            }, false);
 
+            if (invalid) {
+                reject({ status: 400, errors: { phone: invalid } });
+            } else {
+                dataLib.read('users', phone)
+                    .then(result => resolve({ status: 200, result }))
+                    .catch(errors => reject({ status: 404, errors }));
+            }
         });
     },
     DELETE() {
@@ -44,14 +77,15 @@ const handlers = {
 };
 
 module.exports = (req, res) => {
-    const { method, body } = req;
+    const { method } = req;
     if (acceptableMethods.includes(method)) {
-        handlers[method](body)
+        handlers[method](req)
             .then(({ status, result }) => {
                 res.writeHead(status);
                 res.end(JSON.stringify(result));
             }).catch(({ status, errors }) => {
                 res.writeHead(status);
+                console.log(errors);
                 res.end(JSON.stringify(errors));
             });
     } else {
